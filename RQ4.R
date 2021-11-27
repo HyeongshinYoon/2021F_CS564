@@ -32,7 +32,7 @@ chisq.test(df.yearbath.meanbath)
 
 ### 1-1) Graph
 np.yearbathroomcnt <- ggplot(data=df.yearbath.meanbath, aes(x=yearbuilt, y=meanbathroomcnt)) +
-  stat_smooth(color = "#FC4E07") +
+  stat_smooth(color = "#FF6666") +
   xlab('Built year of building') + 
   ylab('Mean bathroom count') + 
   ggtitle("Relation between built year of the building and mean bathroom count") +
@@ -54,7 +54,7 @@ chisq.test(df.yearbed.meanbed)
 
 ### 2-1) Graph
 np.yearbedroomcnt <- ggplot(data=df.yearbed.meanbed, aes(x=yearbuilt, y=meanbedroomcnt)) +
-  stat_smooth(color = "#FC4E07") +
+  stat_smooth(color = "#FF6666") +
   xlab('Built year of building') + 
   ylab('Mean bedroom count') + 
   ggtitle("Relation between built year of the building and mean bedroom count") +
@@ -83,7 +83,7 @@ chisq.test(df.yearfsquarefeet.mean)
 
 ### 3-1) Graph
 np.yearfsquarefeet <- ggplot(data=df.yearfsquarefeet.mean, aes(x=yearbuilt, y=meanfsf)) +
-  stat_smooth(color = "#FC4E07") +
+  stat_smooth(color = "#FF6666") +
   xlab('Built year of building') + 
   ylab('Mean finished squarefeet') + 
   ggtitle("Relation between built year of the building and mean finished squarefeet") +
@@ -112,7 +112,7 @@ chisq.test(df.yearlsquarefeet.mean)
 
 ### 4-1) Graph
 np.yearlsquarefeet <- ggplot(data=df.yearlsquarefeet.mean, aes(x=yearbuilt, y=meanlsf)) +
-  stat_smooth(color = "#FC4E07") +
+  stat_smooth(color = "#FF6666") +
   xlab('Built year of building') + 
   ylab('Mean lotsize squarefeet') + 
   ggtitle("Relation between built year of the building and mean lotsize squarefeet") +
@@ -134,7 +134,7 @@ chisq.test(df.yearpoolcnt.meanpool)
 
 ### 5-1) Graph
 np.yearpoolcnt <- ggplot(data=df.yearpoolcnt.meanpool, aes(x=yearbuilt, y=meanpoolcnt)) +
-  stat_smooth(color = "#FC4E07") +
+  stat_smooth(color = "#FF6666") +
   xlab('Built year of building') + 
   ylab('Mean pool count') + 
   ggtitle("Relation between built year of the building and mean pool count") +
@@ -156,7 +156,7 @@ chisq.test(df.yearroomcnt.meanroomcnt)
 
 ### 6-1) Graph
 np.yearroomcnt <- ggplot(data=df.yearroomcnt.meanroomcnt, aes(x=yearbuilt, y=meanroomcnt)) +
-  stat_smooth(color = "#FC4E07") +
+  stat_smooth(color = "#FF6666") +
   xlab('Built year of building') + 
   ylab('Mean room count') + 
   ggtitle("Relation between built year of the building and mean room count") +
@@ -178,7 +178,7 @@ chisq.test(df.yearunitcnt.meanunitcnt)
 
 ### 8-1) Graph
 np.yearunitcnt <- ggplot(data=df.yearunitcnt.meanunitcnt, aes(x=yearbuilt, y=meanunitcnt)) +
-  stat_smooth(color = "#FC4E07") +
+  stat_smooth(color = "#FF6666") +
   xlab('Built year of building') + 
   ylab('Mean unit count') + 
   ggtitle("Relation between built year of the building and mean unit count") +
@@ -207,7 +207,7 @@ chisq.test(df.yearflsquarefeet.mean) # p-value = 1
 
 ### 9-1) Graph
 np.yearflsquarefeet <- ggplot(data=df.yearflsquarefeet.mean, aes(x=yearbuilt, y=meanflsf)) +
-  stat_smooth(color = "#FC4E07") +
+  stat_smooth(color = "#FF6666") +
   xlab('Built year of building') + 
   ylab('Mean calculatedfinishedsquarefeet/lotsizesquarefeet') + 
   ggtitle("Relation between built year of the building and mean finishedsquarefeet/lotsizesquarefeet") +
@@ -332,7 +332,7 @@ for (yr in seq(1900, 2020, 20)) {
 # 
 # ### 10-1) Graph
 # np <- ggplot(data=df.yearlfsquarefeet.mean, aes(x=yearbuilt, y=meanlfsf)) +
-#   stat_smooth(color = "#FC4E07") +
+#   stat_smooth(color = "#FF6666") +
 #   xlab('Built year of building') + 
 #   ylab('Mean lotsizesquarefeet/calculatedfinishedsquarefeet') + 
 #   ggtitle("Relation between built year of the building and mean lotsizesquarefeet/finishedsquarefeet") +
