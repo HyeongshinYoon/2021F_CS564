@@ -14,12 +14,6 @@ register_google(key='AIzaSyAlPfbgZoK0_zn-LjGhItJtE_hCasBTWI8')
 origin_data <- na.omit(read.csv('data.csv'))
 read_data <- origin_data[c("longitude", "latitude", "taxamount", "calculatedfinishedsquarefeet")]
 
-#alpha = 0.05
-#sort_data <- orderBy(~taxamount, origin_data)
-#read_data <- sort_data[round(nrow(sort_data)*alpha):round(nrow(sort_data)*(1-alpha)), 1:ncol(sort_data)]
-#sort_data <- orderBy(~calculatedfinishedsquarefeet, read_data)
-#read_data <- sort_data[round(nrow(sort_data)*alpha):round(nrow(sort_data)*(1-alpha)), 1:ncol(sort_data)]
-
 #####################################################################################################################
 #####################################################################################################################
 #####################################################################################################################
@@ -30,9 +24,6 @@ data$latitude <- apply(data[2], 1, function(x) {x/1000000})
 
 center <- as.numeric(c(-118.515, 34.075))
 map <- get_googlemap(center=center, language="ko-KR", maptype='roadmap',zoom=8)
-ggmap(map)+
-  labs(title='Mean Tax Amount of house for Sale by Region')
-ggsave("map.png", width=12, height=15, units="cm")
 
 # -119.4754 ~ -117.5566
 lon_axis <- seq(from=-119.475, to=-117.555, by=0.02)
@@ -73,7 +64,7 @@ sort_size <- orderBy(~calculatedfinishedsquarefeet,data1)[(nrow(data1)-299):nrow
 
 heat_mean <- ggmap(map) + 
   geom_tile(data = new_df, aes(x = lon, y = lat, alpha = mean_tax), fill="blue")+
-  labs(title='Mean Tax Amount of House for Sale by Region')+
+  labs(title='Mean tax amount of houses for sale by region')+
   xlab('longitude')+ylab('latitude')+
   scale_alpha(range = c(0, 0.8))+
   scale_x_continuous(limits=c(-119.48,-117.55), expand=c(0,0))+
@@ -83,7 +74,7 @@ ggsave("heatmap_tax.png", width=13.5, height=15, units="cm")
 
 heat_mean_size <- ggmap(map) + 
   geom_tile(data = new_df, aes(x = lon, y = lat, alpha = mean_size), fill="blue")+
-  labs(title='Mean Calculated finished Square Footage')+
+  labs(title='Mean calculated finished square footage of houses for sale by region')+
   xlab('longitude')+ylab('latitude')+
   scale_alpha(range = c(0, 0.8))+
   scale_x_continuous(limits=c(-119.48,-117.55), expand=c(0,0))+
@@ -93,7 +84,7 @@ ggsave("heatmap_size.png", width=13.5, height=15, units="cm")
 
 heat_freq <- ggmap(map) + 
   geom_tile(data = new_df, aes(x = lon, y = lat, alpha = freq), fill="blue")+
-  labs(title='Frequency of House for Sale by Region')+
+  labs(title='Frequency of houses for sale by region')+
   xlab('longitude')+ylab('latitude')+
   scale_alpha(range = c(0, 0.8))+
   scale_x_continuous(limits=c(-119.48,-117.55), expand=c(0,0))+
