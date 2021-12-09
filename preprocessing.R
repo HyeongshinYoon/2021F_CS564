@@ -9,7 +9,6 @@ df4 <- read.csv("team-project/train_2017.csv" , head=TRUE)
 r2017 <- merge(df3,df4,by=c('parcelid'),all.x=T)
 
 filter_col <- c('parcelid',
-                'fips',
                 'bathroomcnt',
                 'bedroomcnt',
                 'calculatedfinishedsquarefeet',
@@ -21,11 +20,7 @@ filter_col <- c('parcelid',
                 'roomcnt',
                 'unitcnt',
                 'yearbuilt',
-                'structuretaxvaluedollarcnt',
-                'taxvaluedollarcnt',
-                'landtaxvaluedollarcnt',
-                'taxamount',
-                'transactiondate')
+                'taxamount')
 
 filter_r2016 <- r2016[, filter_col]
 filter_r2017 <- r2017[, filter_col]
@@ -36,7 +31,7 @@ mergedata <- rbind(filter_r2016, filter_r2017)
 
 mergedata$na_count <- apply(is.na(mergedata), 1, sum)
 mergedata_result = mergedata[mergedata$na_count < 2,]
-mergedata_result_v1 <- mergedata_result[, 1:17]
+mergedata_result_v1 <- mergedata_result[, 2:13]
 mergedata_result_sample <- sample_frac(mergedata_result_v1, 0.2)
 
-write.csv(mergedata_result_sample,"team-project/mergedata_result_sample.csv" , all(T), row.names = F)
+write.csv(mergedata_result_sample,"team-project/mergedata_result_sample_v1.csv" , all(T), row.names = F)
