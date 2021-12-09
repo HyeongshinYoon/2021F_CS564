@@ -19,15 +19,13 @@ library(ggpmisc)
 # Read Data
 origin_data <- na.omit(read.csv('data.csv'))
 origin_data <- origin_data[c("bathroomcnt","bedroomcnt","calculatedfinishedsquarefeet","lotsizesquarefeet", "poolcnt",
-                             "unitcnt","taxamount","yearbuilt","structuretaxvaluedollarcnt","landtaxvaluedollarcnt","taxvaluedollarcnt","propertylandusedesc")]
+                             "unitcnt","taxamount","yearbuilt","propertylandusedesc")]
 
 filtered_data <- origin_data %>% filter((bathroomcnt > 0) & (bedroomcnt > 0) & (calculatedfinishedsquarefeet > 0) & (lotsizesquarefeet > 0) & (unitcnt > 0) &
-                                          (taxamount > 0) & (yearbuilt > 0) & (structuretaxvaluedollarcnt > 0) & (landtaxvaluedollarcnt > 0))
+                                          (taxamount > 0) & (yearbuilt > 0))
 
 alpha = 0.025
 sort_data <- orderBy(~taxamount, filtered_data)
-read_data <- sort_data[round(nrow(sort_data)*alpha):round(nrow(sort_data)*(1-alpha)), 1:ncol(sort_data)]
-sort_data <- orderBy(~taxvaluedollarcnt, read_data)
 read_data <- sort_data[round(nrow(sort_data)*alpha):round(nrow(sort_data)*(1-alpha)), 1:ncol(sort_data)]
 sort_data <- orderBy(~calculatedfinishedsquarefeet, read_data)
 read_data <- sort_data[round(nrow(sort_data)*alpha):round(nrow(sort_data)*(1-alpha)), 1:ncol(sort_data)]
@@ -79,10 +77,9 @@ print((summary(aov.out)))
 
 # Read Data
 data2 <- read_data[c("bathroomcnt","bedroomcnt","calculatedfinishedsquarefeet","lotsizesquarefeet", "poolcnt",
-                     "unitcnt","taxamount","yearbuilt","structuretaxvaluedollarcnt","landtaxvaluedollarcnt","taxvaluedollarcnt","propertylandusedesc")]
+                     "unitcnt","taxamount","yearbuilt","propertylandusedesc")]
 
 # Make New Column
-data2$proportion_tax <- apply(data2[c("structuretaxvaluedollarcnt","landtaxvaluedollarcnt")],1,function(x){x[1]/(x[1]+x[2])})
 data2$proportion_squarefeet <- apply(data2[c("calculatedfinishedsquarefeet","lotsizesquarefeet")],1,function(x){x[1]/x[2]})
 data2$poocnt_bool <- apply(data2[c("poolcnt")],1,function(x) {if (x==1){return('True')}; return ('False')})
 
@@ -156,43 +153,6 @@ p8 <- ggplot(data=data2, aes(x=proportion_squarefeet, y=taxamount))+
        x="Finished Square Footage to Lot Size Ratio", y="Tax Amount($)")+
   theme(plot.title = element_text(hjust = 0.5))
 ggsave("p8.png", width=20, height=15, units="cm")
-
-form <- taxamount ~ taxvaluedollarcnt
-mfit <- lm(form, data=data2)
-print(summary(mfit))
-p9 <- ggplot(data=data2, aes(x=taxvaluedollarcnt, y=taxamount))+
-  geom_smooth(method="lm", se=FALSE, color="red",formula=y~x)+
-  stat_poly_eq(formula=y~x,
-               aes(label = paste(..eq.label..,..rr.label..,sep="~~~")),
-               parse=TRUE)+
-  labs(title="Tax Amount VS Tax Value",
-       x="Tax Value($)", y="Tax Amount($)")+
-  theme(plot.title = element_text(hjust = 0.5))
-ggsave("p9.png", width=20, height=15, units="cm")
-
-data2$predicted_taxamount <- apply(data2[c("taxvaluedollarcnt")], 1, function(x){predict(mfit, list(taxvaluedollarcnt=x))})
-data2$error_taxamount <- apply(data2[c("taxamount","predicted_taxamount")], 1, function(x) {x[1]-x[2]})
-
-p_10 <- ggplot(data=data2, aes(x=proportion_tax, y=error_taxamount))+
-  stat_smooth(color="#FF6666")+
-  labs(title="Error of Tax Amount VS Structure to Total Tax Value Ratio",
-       x="Structure to Total Tax Value Ratio", y="Error of Tax Amount($)")+
-  theme(plot.title = element_text(hjust = 0.5))
-ggsave("p10.png", width=20, height=15, units="cm")
-
-p11 <- ggplot(data=filtered_data, aes(x=taxvaluedollarcnt, y=taxamount))+
-  geom_point()+
-  labs(title="Tax Amount VS Tax Value",
-       x="Tax Value($)", y="Tax Amount($)")+
-  theme(plot.title = element_text(hjust = 0.5))
-ggsave("p11.png", width=20, height=15, units="cm")
-
-p12 <- ggplot(data=read_data, aes(x=taxvaluedollarcnt, y=taxamount))+
-  geom_point()+
-  labs(title="Tax Amount VS Tax Value with Removing Outliers",
-       x="Tax Value($)", y="Tax Amount($)")+
-  theme(plot.title = element_text(hjust = 0.5))
-ggsave("p12.png", width=20, height=15, units="cm")
 
 p13 <- ggplot(data=data2, aes(x=reorder(propertylandusedesc,taxamount), y=taxamount))+
   geom_boxplot()+
