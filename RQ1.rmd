@@ -1,0 +1,307 @@
+---
+title: "R Notebook"
+author: taeyoonkim
+date: 21. 11. 16.
+output: html_document
+---
+
+```{r}
+df <- read.csv('data_sampled.csv', header = TRUE)
+head(df)
+```
+```{r}
+library(dplyr)
+year_df <- df %>%
+  mutate(year_range = yearbuilt %/% 10 * 10) %>%
+  filter(year_range >= 1900)
+year_df$year_range <- as.factor(year_df$year_range)
+head(df)
+agg_year <- year_df %>% count(propertylandusedesc, year_range)
+cross_table <- xtabs(n ~ year_range + propertylandusedesc, data = agg_year)
+flat_table <- ftable(cross_table)
+flat_table
+chisq.test(flat_table)
+library(grid)
+library(vcd)
+library(ggmosaic)
+#ggplot(data = year_df) +
+#  geom_mosaic(aes(x = product(propertylandusedesc, year_range), fill = propertylandusedesc), offset = 0)
+mosaic(cross_table, shade = TRUE, legend = TRUE, direction = "v", rot_labels = c(90, 90, 90, 0), just_labels = c("center",
+                                                                                                                 "center",
+                                                                                                                 "center",
+                                                                                                                 "right"), gp = shading_hcl, gp_args = list(interpolate = c(0.7, 1.8)))
+```
+```{r}
+#max_lat <- max(df$latitude / 1000000)
+#min_lat <- min(df$latitude / 1000000)
+#max_long <- max(df$longitude / 1000000)
+#min_long <- min(df$longitude / 1000000)
+library(ggmap)
+library(tidyr)
+register_google(key = 'AIzaSyDtKzJiUkUGLTmKFSYXA9cYYdUQZ-S9TjI')
+center <- as.numeric(c(-118.515, 34.075))
+map <- get_googlemap(center = center, language = "ko-KR", maptype = 'roadmap', zoom = 8)
+df$lat_tile <- cut(df$latitude / 1000000, 100)
+df$long_tile <- cut(df$longitude / 1000000, 100)
+head(df)
+#pattern <- "(\\(|\\[)(-*[0-9]+\\.*[0-9]*),(-*[0-9]+\\.*[0-9]*)(\\)|\\])"
+med_df <- df %>%
+  extract(lat_tile, c("start_lat", "end_lat"), "(-*\\d+\\.*\\d*),(-*\\d+\\.*\\d*)") %>%
+  extract(long_tile, c("start_long", "end_long"), "(-*\\d+\\.*\\d*),(-*\\d+\\.*\\d*)")
+#df$start_lat <- as.numeric(gsub(pattern,"\\2", df$lat_tile))
+#df$end_lat <- as.numeric(gsub(pattern,"\\3", df$lat_tile))
+med_df$lat_med <- round((as.numeric(med_df$start_lat) + as.numeric(med_df$end_lat)) / 2, 2)
+med_df$long_med <- round((as.numeric(med_df$start_long) + as.numeric(med_df$end_long)) / 2, 2)
+#freq_df$long_med <- (freq_df$start_long + freq_df$end_long) / 2
+head(med_df)
+#
+#df$start_long <- as.numeric(gsub(pattern,"\\2", df$long_tile))
+#df$end_long <- as.numeric(gsub(pattern,"\\3", df$long_tile))
+#df$long_med<-(df$start_long+df$end_long)/2
+freq_df <- med_df %>%
+  group_by(lat_med, long_med) %>%
+  summarise(count = n())
+head(freq_df)
+ggmap(map) +
+  #geom_tile(data = new_df, aes(x = lon, y = lat, alpha = mean), fill = "blue") +
+  geom_tile(data = freq_df, aes(x = lat_med, y = long_med, alpha = count), fill = "blue") +
+  #coord_fixed()+
+  scale_alpha(range = c(0, 0.8)) +
+  scale_x_continuous(limits = c(-119.48, -117.55), expand = c(0, 0)) +
+  scale_y_continuous(limits = c(33.11, 35.04), expand = c(0, 0))
+```
+```{r}
+library(ggplot2)
+#ggplot(df, aes(x = yearbuilt)) +
+#  geom_histogram(binwidth = 5)
+#ggsave("hist_year.png", dpi = 100)
+#geom_density(alpha = .2, fill = "#FF6666")
+#ggplot(df, aes(x = regionidzip)) +
+#  geom_histogram(binwidth = 5) +
+#  xlim(80000, 100000)
+#ggplot(df, aes(x = county)) +
+#  geom_bar()
+library(dplyr)
+df <- df %>%
+  filter(yearbuilt > 1875)
+ggplot(df, aes(x = yearbuilt, fill = propertylandusedesc)) +
+  geom_density(alpha = 0.5, color = 'lightgray') +
+  guides(fill = guide_legend(override.aes = list(size = 5, alpha = 0.7, linetype = "blank", shape = NA))) +
+  xlab(label = 'Year Built') +
+  ylab(label = 'Density') +
+  labs(fill = "Property Land Use") +
+  ggtitle('Density Distribution of Year Built by Property Type') +
+  theme(plot.title = element_text(hjust = 0.5))
+ggsave("dist_type.png", width = 25, height = 15, units = 'cm')
+ggplot(df, aes(x = yearbuilt, fill = propertylandusedesc)) +
+  geom_bar(alpha = 0.8, binwidth = 5, stat = "bin") +
+  guides(fill = guide_legend(override.aes = list(size = 5, alpha = 0.7))) +
+  xlab(label = 'Year Built') +
+  ylab(label = 'Frequency') +
+  labs(fill = "Property Land Use") +
+  ggtitle('Frequency Distribution of Year Built by Property Type') +
+  theme(plot.title = element_text(hjust = 0.5))
+ggsave("freq_type.png", width = 25, height = 15, units = 'cm')
+```
+```{r}
+library(maps)
+library(ggplot2)
+library(dplyr)
+library(ggmap)
+register_google(key = 'AIzaSyDtKzJiUkUGLTmKFSYXA9cYYdUQZ-S9TjI')
+center <- as.numeric(c(-118.515, 34.075))
+map <- get_googlemap(center = center, language = "ko-KR", maptype = 'roadmap', zoom = 8)
+library(scales)
+#library(usmap)
+#df <- usmap_transform(df)
+#plot_usmap('counties',include = c("CA"), fill = "yellow", alpha = 0.25)+
+#  coord_map(projection = "albers", lat0 = 32.5, lat1 = 35) +
+#  geom_point(data = df, aes(x = longitude / 1000000, y = latitude / 1000000), alpha = 0.1, size = 0.1, color = 'red')
+df_max <- df %>%
+  filter(yearbuilt < 2020)
+color_map <- setNames(hue_pal()(length(unique(df_max$propertylandusedesc))), unique(df_max$propertylandusedesc))
+print(str(color_map))
+for (yr in seq(1900, 2020, 10)) {
+  yr
+  df_years <- df %>%
+    filter(yearbuilt < yr)
+  print(head(df_years))
+  data <- map_data('county') %>%
+    filter(region == 'california')
+  #head(data)
+  #ggplot(data, mapping = aes(x = long, y = lat)) +
+  map_year <- ggmap(map) +
+    #geom_polygon(data, mapping = aes(group = group, fill = subregion, alpha = 0.3)) +
+    coord_map(projection = "albers", lat0 = 39, lat1 = 45, xlim = c(-119.5, -117.5), ylim = c(33, 35)) +
+    geom_point(data = df_years, aes(x = longitude / 1000000 - 0.03, y = latitude / 1000000, color = as.factor(df_years$propertylandusedesc)), alpha = 0.2, size = 0.1) +
+    scale_colour_manual(values = color_map) +
+    guides(colour = guide_legend(override.aes = list(size = 5, alpha = 0.5))) +
+    xlab(label = 'Longitude') +
+    ylab(label = 'Latitude') +
+    labs(col = "Property Land Use") +
+    ggtitle(sprintf("Built until %d", yr)) +
+    theme(plot.title = element_text(hjust = 0.5))
+  ggsave(sprintf("plot_%d.png", yr), width = 20, height = 15, units = 'cm', plot = map_year)
+}
+```
+```{r}
+df <- df %>% mutate(yearrange = yearbuilt %/% 20 * 20)
+model <- aov(yearbuilt ~ propertylandusedesc, data = df)
+summary(model)
+tk <- TukeyHSD(model, conf.level = 0.95)
+par(mar = c(5, 36, 4, 1))
+plot(tk, las = 1)
+tky <- as.data.frame(tk$propertylandusedesc)
+tky$pair <- rownames(tky)
+tky
+#Plot pairwise TukeyHSD comparisons and color by significance level
+ggplot(tky, aes(colour = cut(`p adj`, breaks = c(0, 0.01, 0.05, 1), include.lowest = TRUE, label = c("p<0.01", "p<0.05", "Non-Sig")))) +
+  geom_hline(yintercept = 0, lty = "11", colour = "grey30") +
+  geom_errorbar(aes(pair, ymin = lwr, ymax = upr), width = 0.2) +
+  geom_point(aes(pair, diff)) +
+  ylab(label = 'Difference') +
+  xlab(label = "Pairs") +
+  labs(colour = "") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  ggtitle('95% Pairwise Confidence Level of Property Land Use') +
+  theme(plot.title = element_text(hjust = 0.5))
+ggsave("pairwise.png", width = 16, height = 14, dpi = 120)
+#library(sf)
+#library(spData)
+##library(terra)
+#
+#lonlat_to_state <- function(pointsDF,
+#                            states = spData::us_states,
+#                            name_col = "NAME") {
+#    ## Convert points data.frame to an sf POINTS object
+#    pts <- st_as_sf(pointsDF, coords = c("longitude", "latitude"), crs = 4326)
+#
+#    ## Transform spatial data to some planar coordinate system
+#    ## (e.g. Web Mercator) as required for geometric operations
+#    states <- st_transform(states, crs = 3857)
+#    pts <- st_transform(pts, crs = 3857)
+#
+#    ## Find names of state (if any) intersected by each point
+#    state_names <- states[[name_col]]
+#    ii <- as.integer(st_intersects(pts, states))
+#    state_names[ii]
+#}
+##locations_sf <- st_as_sf(as_tibble(df), coords = c("longitude", "latitude"), crs = 4326)
+##head(locations_sf)
+#ldf<-lonlat_to_state(df)
+#head(ldf)
+#df<-df%>% mutate(state=lonlat_to_state(regionidzip))
+#install.packages("terra")
+#library(terra)
+#library(zipcodeR)
+#zipcodeR::zip_distance('08901','08731')
+```
+```{r}
+data3 <- read_data[c("longitude", "latitude", "taxamount", "county")]
+data3$longitude <- apply(data3[1], 1, function(x) { x / 1000000 })
+data3$latitude <- apply(data3[2], 1, function(x) { x / 1000000 })
+data3_la <- as.data.frame(data3 %>%
+                            filter(taxamount < 200000) %>%
+                            filter(county == "Los Angeles"))
+data3_o <- as.data.frame(data3 %>%
+                           filter(taxamount < 200000) %>%
+                           filter(county == "Orange"))
+data3_v <- as.data.frame(data3 %>%
+                           filter(taxamount < 200000) %>%
+                           filter(county == "Ventura"))
+length(data3_la$longitude)
+length(data3_o$longitude)
+length(data3_v$longitude)
+data3$x_c <- cut(data3$latitude, 100)
+data3$y_c <- cut(data3$longitude, 100)
+data3_la$x_c <- cut(data3_la$latitude, 100)
+data3_la$y_c <- cut(data3_la$longitude, 100)
+data3_o$x_c <- cut(data3_o$latitude, 100)
+data3_o$y_c <- cut(data3_o$longitude, 100)
+data3_v$x_c <- cut(data3_v$latitude, 100)
+data3_v$y_c <- cut(data3_v$longitude, 100)
+test <- data3 %>%
+  group_by(x_c, y_c) %>%
+  dplyr::summarise(val = min(mean(taxamount), 30000))
+test_la <- data3_la %>%
+  group_by(x_c, y_c) %>%
+  dplyr::summarise(val = min(mean(taxamount), 30000))
+test_o <- data3_o %>%
+  group_by(x_c, y_c) %>%
+  dplyr::summarise(val = min(mean(taxamount), 30000))
+test_v <- data3_v %>%
+  group_by(x_c, y_c) %>%
+  dplyr::summarise(val = min(mean(taxamount), 15000))
+z = xtabs(val ~ x_c + y_c, data = test)
+z_freq <- table(data3$x_c, data3$y_c)
+z_la = xtabs(val ~ x_c + y_c, data = test_la)
+z_o = xtabs(val ~ x_c + y_c, data = test_o)
+z_v = xtabs(val ~ x_c + y_c, data = test_v)
+##  Plot as a 2D heatmap:
+image2D(z = z, border = "black")
+image2D(z = z_freq, border = "black")
+image2D(z = z_la, border = "black")
+image2D(z = z_o, border = "black")
+image2D(z = z_v, border = "black")
+p6 <- ggplot(data = data3 %>% filter(taxamount < 200000), aes(x = longitude, y = taxamount)) +
+  stat_smooth(color = "#FF6666")
+print(p6)
+p7 <- ggplot(data = data3 %>% filter(taxamount < 200000), aes(x = latitude, y = taxamount)) +
+  stat_smooth(color = "#FF6666")
+print(p7)
+library(maps)
+library(ggplot2)
+library(dplyr)
+library(ggmap)
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+register_google(key = 'AIzaSyAlPfbgZoK0_zn-LjGhItJtE_hCasBTWI8')
+# Read Data
+read_data <- na.omit(read.csv('data.csv'))
+data3 <- read_data[c("longitude", "latitude", "taxamount")]
+data3$longitude <- apply(data3[1], 1, function(x) { x / 1000000 })
+data3$latitude <- apply(data3[2], 1, function(x) { x / 1000000 })
+center <- as.numeric(c(-118.515, 34.075))
+map <- get_googlemap(center = center, language = "ko-KR", maptype = 'roadmap', zoom = 8)
+ggmap(map)
+data4 <- data3 %>% filter(taxamount < 200000)
+# -119.4754 ~ -117.5566
+lon_axis <- seq(from = -119.475, to = -117.555, by = 0.01)
+#  33.33913 ~  34.81960
+lat_axis <- seq(from = 33.115, to = 35.035, by = 0.01)
+lat <- c(0)
+lon <- c(0)
+mean <- c(0)
+freq <- c(0)
+new_df <- data.frame(lon, lat, mean, freq)
+for (i in 1:193) {
+  for (j in 1:193) {
+    tmp_lon = lon_axis[i]
+    tmp_lat = lat_axis[j]
+    tmp <- data4 %>% filter((tmp_lon - 0.005 <= longitude) &
+                              (longitude < tmp_lon + 0.005) &
+                              (tmp_lat - 0.005 <= latitude) &
+                              (latitude < tmp_lat + 0.005))
+    if (nrow(tmp) == 0) {
+      new_df <- rbind(new_df, c(lon_axis[i], lat_axis[j], 0, 0))
+    }
+    else {
+      new_df <- rbind(new_df, c(lon_axis[i], lat_axis[j], min(mean(tmp$taxamount), 30000), nrow(tmp)))
+    }
+  }
+}
+new_df <- new_df[2:nrow(new_df), 1:4]
+heat_mean <- ggmap(map) +
+  geom_tile(data = new_df, aes(x = lon, y = lat, alpha = mean), fill = "blue") +
+  scale_alpha(range = c(0, 0.8)) +
+  scale_x_continuous(limits = c(-119.48, -117.55), expand = c(0, 0)) +
+  scale_y_continuous(limits = c(33.11, 35.04), expand = c(0, 0))
+print(heat_mean)
+heat_freq <- ggmap(map) +
+  geom_tile(data = new_df, aes(x = lon, y = lat, alpha = freq), fill = "blue") +
+  scale_alpha(range = c(0, 0.8)) +
+  scale_x_continuous(limits = c(-119.48, -117.55), expand = c(0, 0)) +
+  scale_y_continuous(limits = c(33.11, 35.04), expand = c(0, 0))
+print(heat_freq)
+```
